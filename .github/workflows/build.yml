@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish a GitHub Release using the version from manifest.json (tags it if the tag does not exist).'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -128,8 +133,12 @@ jobs:
   release:
     name: Publish GitHub Release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'true')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -143,6 +152,12 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          # Setting tag_name explicitly lets this job run for BOTH a tag push
+          # (tag already exists) and a manual workflow_dispatch (action will
+          # create the tag on-the-fly, pointing at whatever commit is checked
+          # out for this run).
+          tag_name: v${{ needs.build.outputs.version }}
+          name: v${{ needs.build.outputs.version }}
           files: |
             dist/*.zip
             dist/*.xpi
