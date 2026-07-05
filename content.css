@@ -1,0 +1,263 @@
+/* Steam Cards Bulk Seller -- injected panel */
+#scbs-root.scbs-panel {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: 420px;
+  max-height: 80vh;
+  background: linear-gradient(180deg, #23272e 0%, #1b2028 100%);
+  color: #c7d5e0;
+  font-family: "Motiva Sans", Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  border: 1px solid #000;
+  border-radius: 3px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#scbs-root.scbs-panel * { box-sizing: border-box; }
+
+#scbs-root .scbs-header {
+  background: linear-gradient(180deg, #3d4450 0%, #262b32 100%);
+  border-bottom: 1px solid #000;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: move;
+}
+
+#scbs-root .scbs-title {
+  font-weight: bold;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+#scbs-root .scbs-toggle {
+  background: transparent;
+  border: 1px solid #4c5461;
+  color: #c7d5e0;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  border-radius: 2px;
+  cursor: pointer;
+}
+#scbs-root .scbs-toggle:hover { background: #3d4450; }
+
+#scbs-root.scbs-collapsed .scbs-body { display: none; }
+
+#scbs-root .scbs-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+}
+
+#scbs-root .scbs-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#scbs-root .scbs-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #b0c3d9;
+}
+
+#scbs-root .scbs-row input[type="number"] {
+  background: #1b2028;
+  border: 1px solid #000;
+  color: #c7d5e0;
+  padding: 4px 6px;
+  width: 80px;
+  border-radius: 2px;
+  font-size: 12px;
+}
+
+#scbs-root .scbs-hint { color: #7c8996; }
+
+#scbs-root .scbs-check { cursor: pointer; }
+
+#scbs-root .scbs-actions button {
+  background: linear-gradient(180deg, #4a5563 0%, #2e3742 100%);
+  color: #ffffff;
+  border: 1px solid #000;
+  padding: 5px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 12px;
+}
+#scbs-root .scbs-actions button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #5a6779 0%, #37414d 100%);
+}
+#scbs-root .scbs-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#scbs-root .scbs-primary {
+  background: linear-gradient(180deg, #7db836 0%, #4c8720 100%) !important;
+}
+#scbs-root .scbs-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #8fce3d 0%, #58971f 100%) !important;
+}
+
+#scbs-root .scbs-status {
+  padding: 6px 8px;
+  background: #1b2028;
+  border: 1px solid #000;
+  border-radius: 2px;
+  color: #b0c3d9;
+}
+
+#scbs-root .scbs-progress {
+  position: relative;
+  height: 16px;
+  background: #1b2028;
+  border: 1px solid #000;
+  border-radius: 2px;
+  overflow: hidden;
+}
+#scbs-root .scbs-progress-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: linear-gradient(90deg, #66c0f4, #417a9b);
+  transition: width 0.15s linear;
+}
+#scbs-root .scbs-progress-text {
+  position: relative;
+  text-align: center;
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 16px;
+  z-index: 1;
+}
+
+#scbs-root .scbs-list-wrap {
+  border: 1px solid #000;
+  background: #171a21;
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+}
+#scbs-root .scbs-list-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background: #23272e;
+  border-bottom: 1px solid #000;
+  color: #b0c3d9;
+}
+#scbs-root .scbs-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+#scbs-root .scbs-row-card {
+  padding: 4px 8px;
+  border-bottom: 1px solid #1b2028;
+}
+#scbs-root .scbs-row-card:hover { background: #1b2028; }
+#scbs-root .scbs-card-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+#scbs-root .scbs-card-img {
+  width: 32px;
+  height: 32px;
+  background: #000;
+  border: 1px solid #2a2f3a;
+  flex: 0 0 32px;
+}
+#scbs-root .scbs-card-name {
+  flex: 1;
+  color: #c7d5e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#scbs-root .scbs-foil-badge {
+  background: #66c0f4;
+  color: #171a21;
+  font-style: normal;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin-left: 4px;
+}
+#scbs-root .scbs-card-price {
+  color: #c7d5e0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+  text-align: right;
+  flex: 0 0 auto;
+}
+#scbs-root .scbs-card-price .scbs-price-val { color: #a4d007; font-weight: bold; }
+#scbs-root .scbs-card-price .scbs-price-none { color: #556370; }
+
+#scbs-root .scbs-actions-secondary { margin-top: -2px; }
+#scbs-root .scbs-sort-label {
+  margin-left: auto;
+  color: #b0c3d9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#scbs-root .scbs-sort {
+  background: #1b2028;
+  border: 1px solid #000;
+  color: #c7d5e0;
+  padding: 3px 6px;
+  border-radius: 2px;
+  font-size: 12px;
+}
+
+#scbs-root .scbs-card-status {
+  color: #7c8996;
+  font-size: 11px;
+  min-width: 100px;
+  text-align: right;
+}
+#scbs-root .scbs-card-status.scbs-pending { color: #66c0f4; }
+#scbs-root .scbs-card-status.scbs-ok { color: #a4d007; }
+#scbs-root .scbs-card-status.scbs-warn { color: #e8b74a; }
+#scbs-root .scbs-card-status.scbs-err { color: #ff5c5c; }
+
+#scbs-root .scbs-log-wrap {
+  background: #0f1216;
+  border: 1px solid #000;
+  border-radius: 2px;
+  color: #7c8996;
+}
+#scbs-root .scbs-log-wrap summary {
+  cursor: pointer;
+  padding: 4px 8px;
+  color: #b0c3d9;
+}
+#scbs-root .scbs-log {
+  margin: 0;
+  padding: 6px 8px;
+  max-height: 120px;
+  overflow-y: auto;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #7c8996;
+}

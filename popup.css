@@ -1,0 +1,81 @@
+html, body {
+  width: 320px;
+  margin: 0;
+  padding: 0;
+  font-family: "Motiva Sans", Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  background: #1b2028;
+  color: #c7d5e0;
+}
+header {
+  background: linear-gradient(180deg, #3d4450, #262b32);
+  padding: 10px 12px;
+  border-bottom: 1px solid #000;
+}
+header h1 {
+  margin: 0;
+  font-size: 14px;
+  color: #fff;
+}
+.notice {
+  padding: 10px 12px;
+  color: #8b98a8;
+  font-size: 12px;
+  border-bottom: 1px solid #0e1116;
+}
+.notice a { color: #66c0f4; }
+.settings {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: #b0c3d9;
+}
+.settings input[type="number"] {
+  background: #0f1216;
+  color: #c7d5e0;
+  border: 1px solid #000;
+  padding: 4px 6px;
+  width: 90px;
+  border-radius: 2px;
+}
+.settings fieldset {
+  border: 1px solid #000;
+  background: #0f1216;
+  border-radius: 2px;
+  padding: 8px;
+}
+.settings fieldset legend { color: #8b98a8; padding: 0 4px; }
+.settings .check { justify-content: flex-start; }
+footer {
+  padding: 10px 12px;
+  border-top: 1px solid #0e1116;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+footer button {
+  background: linear-gradient(180deg, #4a5563 0%, #2e3742 100%);
+  color: #fff;
+  border: 1px solid #000;
+  padding: 6px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+footer button:hover { background: linear-gradient(180deg, #5a6779 0%, #37414d 100%); }
+footer .primary {
+  background: linear-gradient(180deg, #7db836 0%, #4c8720 100%);
+}
+footer .primary:hover { background: linear-gradient(180deg, #8fce3d 0%, #58971f 100%); }
+.status {
+  margin-left: auto;
+  color: #a4d007;
+  font-size: 12px;
+  min-height: 16px;
+}

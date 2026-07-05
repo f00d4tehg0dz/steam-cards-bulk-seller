@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Steam Cards Bulk Seller</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Steam Cards Bulk Seller</h1>
+    </header>
+    <section class="notice">
+      Open <a href="https://steamcommunity.com/market/" target="_blank" rel="noopener">steamcommunity.com/market</a>
+      or your inventory to use the panel. Settings below apply as defaults.
+    </section>
+    <section class="settings">
+      <label>
+        Default price modifier (%)
+        <input type="number" id="pricePercent" step="0.5" />
+      </label>
+      <label>
+        Delay between sellitem POSTs (ms)
+        <input type="number" id="requestDelayMs" min="100" step="50" />
+      </label>
+      <label>
+        Delay between price fetches (ms)
+        <input type="number" id="priceDelayMs" min="100" step="50" />
+      </label>
+      <label>
+        Max 429 retries
+        <input type="number" id="maxRetries" min="0" max="10" />
+      </label>
+      <label>
+        Price cache TTL (minutes)
+        <input type="number" id="priceCacheTTLMin" min="0" step="5" />
+      </label>
+      <fieldset>
+        <legend>Card types</legend>
+        <label class="check"><input type="checkbox" id="cardTypesNormal" /> Normal</label>
+        <label class="check"><input type="checkbox" id="cardTypesFoil" /> Foil</label>
+      </fieldset>
+      <label class="check">
+        <input type="checkbox" id="onlyMarketable" /> Only include marketable items
+      </label>
+    </section>
+    <footer>
+      <button id="save" class="primary">Save</button>
+      <button id="reset">Reset to defaults</button>
+      <button id="clearCache" title="Delete cached market prices">Clear price cache</button>
+      <div id="status" class="status"></div>
+    </footer>
+    <script src="popup.js"></script>
+  </body>
+</html>

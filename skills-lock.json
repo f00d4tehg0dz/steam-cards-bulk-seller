@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "browser-extension-builder": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/browser-extension-builder/SKILL.md",
+      "computedHash": "8ee008a21ab17428fb4d9812fae5113b7fd5c5a0bcf575a7d9e297e54c0b6497"
+    },
+    "chrome-extensions": {
+      "source": "googlechrome/modern-web-guidance",
+      "sourceType": "github",
+      "skillPath": "skills/chrome-extensions/SKILL.md",
+      "computedHash": "d7013d109750435e4d9d94f969ea7016eebd498d461bf2afb93badf5e54f1e62"
+    },
+    "code-testing-extensions": {
+      "source": "dotnet/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/dotnet-test/skills/code-testing-extensions/SKILL.md",
+      "computedHash": "477d89de2b2bfdfd57888c318529fb9c3de992ef093571075c2c1d6e8b8a522c"
+    },
+    "microsoft-extensions-dependency-injection": {
+      "source": "wshaddix/dotnet-skills",
+      "sourceType": "github",
+      "skillPath": "skills/microsoft-extensions-dependency-injection/SKILL.md",
+      "computedHash": "74781977c0ccd9c91a6e0966a128586a8e35c52485af918c09af8e9022e05517"
+    },
+    "steam-launch-readiness": {
+      "source": "sylphxai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/steam-launch-readiness/SKILL.md",
+      "computedHash": "e0551ed5cc4b0934941f586ed6a322383bbd066cddfb282143e50f974b01a07b"
+    },
+    "steam-publish": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/workflows/steam-publish/SKILL.md",
+      "computedHash": "c603abaa079f06f68a0b76e0b40b568930b0cb092aeae21f16481fed6486a4cd"
+    },
+    "steam-store-launch-ops": {
+      "source": "akillness/jeo-skills",
+      "sourceType": "github",
+      "skillPath": ".agent-skills/steam-store-launch-ops/SKILL.md",
+      "computedHash": "c6d03d70ef8e21a4e00ddc852adf81b8d40e8feb8cb8a19fa66fe895560bff7d"
+    }
+  }
+}

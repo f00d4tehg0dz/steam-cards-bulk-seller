@@ -1,0 +1,24 @@
+# Build artifacts produced locally or by CI
+dist/
+build/
+
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# web-ext output
+web-ext-artifacts/
+
+# Vibed Items
+CLAUDE.md
+.agents
+.skills-lock.json
+.claude
