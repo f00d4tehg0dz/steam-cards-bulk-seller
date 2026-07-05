@@ -20,5 +20,5 @@ web-ext-artifacts/
 # Vibed Items
 CLAUDE.md
 .agents
-.skills-lock.json
+skills-lock.json
 .claude
