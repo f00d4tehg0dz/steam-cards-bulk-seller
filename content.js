@@ -247,6 +247,113 @@ async function runWithBackoff(fn, maxRetries, onRetry) {
 }
 
 // -----------------------------------------------------------------------------
+// Price resolver. priceoverview is rate limited to roughly 20 requests per
+// minute (per IP; Steam's own inventory page draws on the same budget). Going
+// over it gets 429 for every card until the window has passed, so instead of
+// reacting to 429s, PriceLimiter keeps a sliding window of our own requests and
+// waits before one would exceed it. The window is stored, so reloading the
+// page doesn't reset it. If a 429 still comes (Steam's page used some of the
+// budget), the window is treated as full and that card is retried at the end.
+// -----------------------------------------------------------------------------
+
+const PriceLimiter = {
+  MAX: 18,          // stay a little under Steam's ~20/min
+  WINDOW_MS: 60000,
+  KEY: "rl:priceoverview",
+  _stamps: null,
+
+  async _load() {
+    if (this._stamps) return;
+    try {
+      const r = await api.storage.local.get(this.KEY);
+      this._stamps = Array.isArray(r[this.KEY]) ? r[this.KEY] : [];
+    } catch (_) { this._stamps = []; }
+  },
+  _save() {
+    try { Promise.resolve(api.storage.local.set({ [this.KEY]: this._stamps })).catch(() => {}); } catch (_) {}
+  },
+  // How long until the next request fits in the window (0 = go now).
+  async waitMs() {
+    await this._load();
+    const now = Date.now();
+    this._stamps = this._stamps.filter((t) => now - t < this.WINDOW_MS);
+    return this._stamps.length < this.MAX ? 0 : this._stamps[0] + this.WINDOW_MS - now + 250;
+  },
+  record() { this._stamps.push(Date.now()); this._save(); },
+  markFull() { this._stamps = new Array(this.MAX).fill(Date.now()); this._save(); }
+};
+
+async function sleepUnless(ms, isCancelled) {
+  const end = Date.now() + ms;
+  while (!isCancelled() && Date.now() < end) await sleep(Math.min(250, end - Date.now()));
+}
+
+// hooks: { isCancelled(), log(msg), onPending(card, text), onResolved(card, cents), onFailed(card, err) }
+async function resolvePrices(cards, currency, settings, hooks) {
+  const delay = Math.max(100, settings.priceDelayMs);
+  const maxAttempts = Math.max(1, (settings.maxRetries | 0) + 1);
+
+  // Copies of the same card share one market_hash_name -- ask Steam once per
+  // name and apply the answer to every copy.
+  const byName = new Map();
+  for (const card of cards) {
+    const group = byName.get(card.market_hash_name);
+    if (group) group.copies.push(card);
+    else byName.set(card.market_hash_name, { card, copies: [card], attempts: 0, retryAt: 0 });
+  }
+  const pending = [...byName.values()];
+  const each = (item, fn) => item.copies.forEach(fn);
+  let sentAny = false;
+
+  while (pending.length && !hooks.isCancelled()) {
+    // Fresh cards (retryAt 0) first in original order, then ones that got a 429.
+    pending.sort((a, b) => a.retryAt - b.retryAt);
+    const item = pending[0];
+    const { card } = item;
+
+    const limitWait = await PriceLimiter.waitMs();
+    if (limitWait > 0) {
+      const end = Date.now() + limitWait;
+      if (limitWait > 5000) {
+        hooks.log(`  Steam allows ~${PriceLimiter.MAX} price lookups per minute -- next batch in ${Math.ceil(limitWait / 1000)}s (${pending.length} left).`);
+      }
+      // Live countdown on the waiting card's row, refreshed every second.
+      while (!hooks.isCancelled() && Date.now() < end) {
+        const s = Math.ceil((end - Date.now()) / 1000);
+        each(item, (c) => hooks.onPending(c, `waiting for Steam limit (${s}s)...`));
+        await sleepUnless(Math.min(1000, end - Date.now()), hooks.isCancelled);
+      }
+      continue;
+    }
+    if (sentAny) await sleepUnless(delay, hooks.isCancelled);
+    if (hooks.isCancelled()) break;
+
+    pending.shift();
+    sentAny = true;
+    item.attempts++;
+    const pendingText = item.attempts > 1 ? `retrying (${item.attempts}/${maxAttempts})...` : "fetching...";
+    each(item, (c) => hooks.onPending(c, pendingText));
+    PriceLimiter.record();
+
+    try {
+      const cents = await SteamAPI.fetchLowestPriceCents(card.market_hash_name, currency);
+      each(item, (c) => hooks.onResolved(c, cents));
+    } catch (err) {
+      if (!(err && err.status === 429)) { each(item, (c) => hooks.onFailed(c, err)); continue; }
+      PriceLimiter.markFull();
+      if (item.attempts >= maxAttempts) {
+        each(item, (c) => hooks.onFailed(c, err));
+      } else {
+        item.retryAt = Date.now();
+        pending.push(item);
+        each(item, (c) => hooks.onPending(c, "Steam limit hit -- retrying later"));
+        hooks.log(`  429 on ${card.name} -- Steam limit reached anyway (Steam's own page may be using it), pausing ~60s.`);
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
 // Steam API wrappers. All requests share cookies with the page via
 // credentials: "include".
 // -----------------------------------------------------------------------------
@@ -671,6 +778,27 @@ const UI = (function () {
     }
   }
 
+  // Row/cache/log wiring for resolvePrices, shared by Fetch Prices and Bulk Sell.
+  function priceHooks(currency, onCardDone) {
+    return {
+      isCancelled: () => cancelled,
+      log,
+      onPending: (card, text) => setRowStatus(card.assetid, text, "scbs-pending"),
+      onResolved: (card, cents) => {
+        card._priceCents = cents; // may be null
+        PriceCache.set(card.market_hash_name, currency, cents);
+        setRowPrice(card.assetid, card);
+        setRowStatus(card.assetid, "", "");
+        onCardDone();
+      },
+      onFailed: (card, err) => {
+        setRowStatus(card.assetid, "price err: " + err.message, "scbs-err");
+        log(`ERR   ${card.name}: ${err.message}`);
+        onCardDone();
+      }
+    };
+  }
+
   async function onFetchPrices() {
     if (inFlight) return;
     if (!cards.length) { setStatus("Load cards first."); return; }
@@ -699,30 +827,12 @@ const UI = (function () {
     root.querySelector(".scbs-sell").disabled = true;
 
     log(`Fetching prices for ${targets.length} card(s)...`);
-    const priceQueue = new RateLimitedQueue(Math.max(100, settings.priceDelayMs));
     let done = 0;
     setProgress(done, targets.length);
-
-    for (const card of targets) {
-      if (cancelled) break;
-      setRowStatus(card.assetid, "fetching...", "scbs-pending");
-      try {
-        const cents = await priceQueue.push(() => runWithBackoff(
-          () => SteamAPI.fetchLowestPriceCents(card.market_hash_name, currencyCache),
-          settings.maxRetries,
-          (n, w) => log(`  429 on ${card.name}, backoff ${w}ms (retry ${n})`)
-        ));
-        card._priceCents = cents; // may be null
-        PriceCache.set(card.market_hash_name, currencyCache, cents);
-        setRowPrice(card.assetid, card);
-        setRowStatus(card.assetid, "", "");
-      } catch (err) {
-        setRowStatus(card.assetid, "price err: " + err.message, "scbs-err");
-        log(`ERR   ${card.name}: ${err.message}`);
-      }
+    await resolvePrices(targets, currencyCache, settings, priceHooks(currencyCache, () => {
       done++;
       setProgress(done, targets.length);
-    }
+    }));
 
     await PriceCache.flush();
     sortCards(root.querySelector(".scbs-sort").value);
@@ -765,41 +875,36 @@ const UI = (function () {
     const currencySymbol = currencySymbolCache;
     const ttl = settings.priceCacheTTLMs || 0;
 
-    const priceQueue = new RateLimitedQueue(Math.max(100, settings.priceDelayMs));
     const sellQueue = new RateLimitedQueue(delay);
+
+    // Resolve all missing prices up front, so a card Steam has no price ready
+    // for gets retried in the background instead of holding up the listings.
+    const needPrice = selected.filter((c) => c._priceCents === undefined);
+    if (needPrice.length) {
+      log(`Fetching prices for ${needPrice.length} card(s) before listing...`);
+      let fetched = 0;
+      setProgress(0, needPrice.length);
+      await resolvePrices(needPrice, currency, settings, priceHooks(currency, () => {
+        fetched++;
+        setProgress(fetched, needPrice.length);
+      }));
+      await PriceCache.flush();
+    }
 
     let done = 0;
     setProgress(done, selected.length);
 
     for (const card of selected) {
       if (cancelled) break;
-      // Prefer the cached/pre-fetched price. Only hit priceoverview when we
-      // haven't already resolved a price for this card in this session.
+      // Prices were resolved above; null = Steam has no price, undefined = lookup failed.
       try {
-        let lowest;
-        if (typeof card._priceCents === "number") {
-          lowest = card._priceCents;
-        } else if (card._priceCents === null) {
-          setRowStatus(card.assetid, "no price data (cached)", "scbs-warn");
-          log(`SKIP  ${card.name}: no price data.`);
+        const lowest = card._priceCents;
+        if (typeof lowest !== "number") {
+          const why = lowest === null ? "no price data" : "price lookup failed";
+          setRowStatus(card.assetid, why, lowest === null ? "scbs-warn" : "scbs-err");
+          log(`SKIP  ${card.name}: ${why}.`);
           done++; setProgress(done, selected.length);
           continue;
-        } else {
-          setRowStatus(card.assetid, "fetching price...", "scbs-pending");
-          lowest = await priceQueue.push(() => runWithBackoff(
-            () => SteamAPI.fetchLowestPriceCents(card.market_hash_name, currency),
-            settings.maxRetries,
-            (n, w) => log(`  429 on price for ${card.name}, backoff ${w}ms (retry ${n})`)
-          ));
-          card._priceCents = lowest;
-          PriceCache.set(card.market_hash_name, currency, lowest);
-          setRowPrice(card.assetid, card);
-          if (lowest === null) {
-            setRowStatus(card.assetid, "no price data", "scbs-warn");
-            log(`SKIP  ${card.name}: no price data.`);
-            done++; setProgress(done, selected.length);
-            continue;
-          }
         }
 
         const targetBuyer = Math.max(1, Math.round(lowest * (1 + (percent / 100))));
